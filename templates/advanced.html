@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Advanced Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; max-width: 380px; margin: 40px auto; padding: 0 16px; }
+    a { font-size: 0.875rem; color: #555; }
+    h1 { margin-bottom: 20px; }
+
+    #display {
+      width: 100%;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    #expression {
+      font-size: 0.85rem;
+      color: #888;
+      min-height: 1.2em;
+      word-break: break-all;
+    }
+    #current {
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: right;
+      word-break: break-all;
+      min-height: 1.3em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    button {
+      padding: 18px 0;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #e8e8e8;
+      color: #111;
+      transition: filter 0.1s;
+    }
+    button:hover { filter: brightness(0.92); }
+    button:active { filter: brightness(0.82); }
+    .btn-op   { background: #dde8ff; }
+    .btn-fn   { background: #d4f0e8; }
+    .btn-eq   { background: #3a5bbd; color: #fff; grid-column: span 2; }
+    .btn-ac   { background: #ffdada; }
+
+    #history-section { margin-top: 24px; }
+    #history-section h2 { font-size: 1rem; margin-bottom: 8px; }
+    #history { list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #444; }
+    #history li { padding: 4px 0; border-bottom: 1px solid #eee; }
+    #history li:last-child { border-bottom: none; }
+    .error-msg { color: #b00020; font-size: 0.9rem; margin-top: 8px; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <a href="/">&larr; Basic calculator</a>
+  <h1>Advanced Calculator</h1>
+
+  <div id="display">
+    <div id="expression"></div>
+    <div id="current">0</div>
+  </div>
+  <div class="error-msg" id="error"></div>
+
+  <div class="grid">
+    <button class="btn-ac"  data-action="ac">AC</button>
+    <button class="btn-fn"  data-action="sqrt">√</button>
+    <button class="btn-fn"  data-action="log">log</button>
+    <button class="btn-op"  data-action="mod">mod</button>
+
+    <button data-digit="7">7</button>
+    <button data-digit="8">8</button>
+    <button data-digit="9">9</button>
+    <button class="btn-op"  data-action="op" data-op="/">÷</button>
+
+    <button data-digit="4">4</button>
+    <button data-digit="5">5</button>
+    <button data-digit="6">6</button>
+    <button class="btn-op"  data-action="op" data-op="*">×</button>
+
+    <button data-digit="1">1</button>
+    <button data-digit="2">2</button>
+    <button data-digit="3">3</button>
+    <button class="btn-op"  data-action="op" data-op="-">−</button>
+
+    <button data-digit="0">0</button>
+    <button data-digit=".">.</button>
+    <button class="btn-op"  data-action="op" data-op="**">^</button>
+    <button class="btn-op"  data-action="op" data-op="+">+</button>
+
+    <button class="btn-fn"  data-action="backspace">⌫</button>
+    <button class="btn-fn"  data-action="paren">(  )</button>
+    <button class="btn-eq"  data-action="equals">=</button>
+  </div>
+
+  <section id="history-section">
+    <h2>History</h2>
+    <ul id="history"></ul>
+  </section>
+
+  <script>
+    const currentEl = document.getElementById('current');
+    const exprEl    = document.getElementById('expression');
+    const errorEl   = document.getElementById('error');
+    const historyEl = document.getElementById('history');
+
+    let expr = '';
+    let justEvaluated = false;
+
+    function updateDisplay() {
+      currentEl.textContent = expr || '0';
+      errorEl.textContent = '';
+    }
+
+    function openParens() {
+      return (expr.match(/\(/g) || []).length - (expr.match(/\)/g) || []).length;
+    }
+
+    document.querySelector('.grid').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      const digit  = btn.dataset.digit;
+      const action = btn.dataset.action;
+      const op     = btn.dataset.op;
+
+      if (digit !== undefined) {
+        if (justEvaluated && digit !== '.') { expr = ''; }
+        justEvaluated = false;
+        expr += digit;
+        updateDisplay();
+        return;
+      }
+
+      justEvaluated = false;
+
+      switch (action) {
+        case 'ac':
+          expr = '';
+          exprEl.textContent = '';
+          updateDisplay();
+          break;
+
+        case 'backspace':
+          expr = expr.slice(0, -1);
+          updateDisplay();
+          break;
+
+        case 'op':
+          expr += op;
+          updateDisplay();
+          break;
+
+        case 'mod':
+          expr += '%';
+          updateDisplay();
+          break;
+
+        case 'sqrt':
+          expr = `sqrt(${expr})`;
+          updateDisplay();
+          break;
+
+        case 'log':
+          expr = `log(${expr})`;
+          updateDisplay();
+          break;
+
+        case 'paren':
+          if (openParens() > 0 && expr && !/[\(\+\-\*\/\%\^]$/.test(expr)) {
+            expr += ')';
+          } else {
+            expr += '(';
+          }
+          updateDisplay();
+          break;
+
+        case 'equals':
+          if (!expr) return;
+          submit();
+          break;
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+        if (justEvaluated) { expr = ''; justEvaluated = false; }
+        expr += e.key;
+        updateDisplay();
+      } else if (['+', '-', '*', '/', '%', '^', '(', ')'].includes(e.key)) {
+        justEvaluated = false;
+        expr += e.key === '^' ? '**' : e.key;
+        updateDisplay();
+      } else if (e.key === 'Enter' || e.key === '=') {
+        submit();
+      } else if (e.key === 'Backspace') {
+        expr = expr.slice(0, -1);
+        updateDisplay();
+      } else if (e.key === 'Escape') {
+        expr = '';
+        exprEl.textContent = '';
+        updateDisplay();
+      }
+    });
+
+    async function submit() {
+      const raw = expr;
+      exprEl.textContent = raw + ' =';
+      try {
+        const res = await fetch('/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expression: raw }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Error';
+          exprEl.textContent = '';
+          return;
+        }
+        const resultStr = parseFloat(data.result.toPrecision(12)).toString();
+        expr = resultStr;
+        currentEl.textContent = resultStr;
+        justEvaluated = true;
+
+        const li = document.createElement('li');
+        li.textContent = `${raw} = ${resultStr}`;
+        historyEl.prepend(li);
+      } catch {
+        errorEl.textContent = 'Unable to connect to the server.';
+      }
+    }
+  </script>
+</body>
+</html>

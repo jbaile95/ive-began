@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Python Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+    label, select, input, button { display: block; width: 100%; margin-top: 12px; }
+    button { padding: 10px; margin-top: 18px; background: #e8e8e8; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+    .btn-nav { background: #e8660d; color: #fff; }
+    .result { margin-top: 20px; padding: 14px; background: #f4f4f4; border-radius: 6px; }
+    .error { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Python Calculator</h1>
+  <a href="/advanced"><button type="button" class="btn-nav" style="margin-top:0;margin-bottom:16px;">Advanced Calculator &rarr;</button></a>
+  <form id="calculator-form">
+    <label for="a">First number</label>
+    <input id="a" type="number" step="any" required />
+
+    <label for="b">Second number</label>
+    <input id="b" type="number" step="any" required />
+
+    <label for="operation">Operation</label>
+    <select id="operation" required>
+      <option value="add">Add</option>
+      <option value="subtract">Subtract</option>
+      <option value="multiply">Multiply</option>
+      <option value="divide">Divide</option>
+      <option value="power">Power</option>
+    </select>
+
+    <button type="submit">Calculate</button>
+  </form>
+
+  <div class="result" id="result" aria-live="polite"></div>
+
+  <script>
+    const form = document.getElementById('calculator-form');
+    const resultBox = document.getElementById('result');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      resultBox.textContent = 'Calculating...';
+      resultBox.classList.remove('error');
+
+      const a = document.getElementById('a').value;
+      const b = document.getElementById('b').value;
+      const operation = document.getElementById('operation').value;
+
+      try {
+        const response = await fetch('/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ a, b, operation }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          resultBox.textContent = data.error || 'An error occurred.';
+          resultBox.classList.add('error');
+          return;
+        }
+
+        resultBox.textContent = `Result: ${data.result}`;
+      } catch (error) {
+        resultBox.textContent = 'Unable to connect to the server.';
+        resultBox.classList.add('error');
+      }
+    });
+  </script>
+</body>
+</html>
