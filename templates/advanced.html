@@ -213,6 +213,10 @@
     });
 
     async function submit() {
+      if (openParens() !== 0) {
+        errorEl.textContent = 'Unbalanced parentheses.';
+        return;
+      }
       const raw = expr;
       exprEl.textContent = raw + ' =';
       try {

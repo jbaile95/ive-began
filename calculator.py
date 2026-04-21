@@ -1,3 +1,6 @@
+import math
+
+
 class Calculator:
     """A simple calculator with basic arithmetic operations."""
 
@@ -25,14 +28,12 @@ class Calculator:
 
     @staticmethod
     def sqrt(a):
-        import math
         if a < 0:
             raise ValueError("Cannot take square root of a negative number.")
         return math.sqrt(a)
 
     @staticmethod
-    def log(a):
-        import math
+    def log10(a):
         if a <= 0:
             raise ValueError("Logarithm requires a positive number.")
         return math.log10(a)
